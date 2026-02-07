@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Text Util",
+  "version": "1.0.0",
+  "description": "Store and copy frequently used text snippets, synced across devices.",
+  "permissions": [
+    "storage"
+  ],
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Text Util"
+  }
+}
