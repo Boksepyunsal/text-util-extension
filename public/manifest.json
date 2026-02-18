@@ -3,6 +3,7 @@
   "name": "Text Util",
   "version": "1.0.0",
   "description": "Store and copy frequently used text snippets, synced across devices.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5yapxhJ+mjnjoGSYHX3T4h9g7J5zbZ28igLUPBdnxNOeGePOqZn8ZVa93fOZGKqw+k7X0epmBo46EBm2QkmxSaygG/nPmGqWqXeDJW6LRWLHJ5cvQP0FJip5zz0qo4AMhzNRrqo89Y2Au/aRAzqnSpgyfa3LgD+t67XIKbKEWS6EBWt4ngJZxE7rxfjfT7L5M+0faI0Vb9EO868u6D8mE7RsD5y8hH21+pBpIPpIiwgSwvUmFvfJ0FzEIs2b6MYLR24lR+OlGJBrZeE5gcdLmBZ3KD3/LcRm5frfuPJDNO5kE/QX2SbCVHENB72GdrYLVE4BvffECuE7bCg1EAEFXQIDAQAB",
   "permissions": [
     "storage"
   ],

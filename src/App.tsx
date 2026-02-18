@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Plus, Copy, Trash2, Check, X, Search } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Plus, Copy, Trash2, Check, X, Search, Settings, Download, Upload } from 'lucide-react';
 import type { TextItem } from './types';
 import { getItems, saveItems } from './lib/storage';
 
@@ -8,6 +8,9 @@ function App() {
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form State
   const [newTitle, setNewTitle] = useState('');
@@ -31,6 +34,43 @@ function App() {
       return matchesCategory && matchesSearch;
     });
   }, [items, activeCategory, searchQuery]);
+
+  const handleExport = () => {
+    const json = JSON.stringify(items, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `text-util-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setIsMenuOpen(false);
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportError(null);
+
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string) as TextItem[];
+        if (!Array.isArray(parsed)) throw new Error('Invalid format');
+
+        const existingIds = new Set(items.map(i => i.id));
+        const newItems = parsed.filter(i => !existingIds.has(i.id));
+        const merged = [...items, ...newItems];
+        setItems(merged);
+        await saveItems(merged);
+        setIsMenuOpen(false);
+      } catch {
+        setImportError('올바른 백업 파일이 아닙니다.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,14 +106,53 @@ function App() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 p-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
         <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Text Util</h1>
-        <button 
-          onClick={() => setIsFormOpen(true)}
-          className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
-          title="Add New Text"
-        >
-          <Plus size={20} />
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <button
+              onClick={() => setIsMenuOpen(v => !v)}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+              title="Settings"
+            >
+              <Settings size={18} />
+            </button>
+            {isMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
+                <div className="absolute right-0 top-10 z-50 bg-white rounded-xl shadow-lg border border-gray-200 w-44 overflow-hidden">
+                  <button
+                    onClick={handleExport}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
+                    <Download size={15} />
+                    Export (백업)
+                  </button>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
+                    <Upload size={15} />
+                    Import (복원)
+                  </button>
+                  <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
+                </div>
+              </>
+            )}
+          </div>
+          <button
+            onClick={() => setIsFormOpen(true)}
+            className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
+            title="Add New Text"
+          >
+            <Plus size={20} />
+          </button>
+        </div>
       </header>
+      {importError && (
+        <div className="bg-red-50 border-b border-red-200 px-4 py-2 text-sm text-red-600 flex justify-between items-center">
+          {importError}
+          <button onClick={() => setImportError(null)} className="ml-2 cursor-pointer"><X size={14} /></button>
+        </div>
+      )}
 
       {/* Add Form Modal */}
       {isFormOpen && (

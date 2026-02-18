@@ -8,6 +8,11 @@ export const getItems = (): Promise<TextItem[]> => {
   return new Promise((resolve) => {
     if (isChromeStorageAvailable) {
       chrome.storage.sync.get([STORAGE_KEY], (result: { [key: string]: any }) => {
+        if (chrome.runtime.lastError) {
+          console.error('Storage read error:', chrome.runtime.lastError.message);
+          resolve([]);
+          return;
+        }
         resolve((result[STORAGE_KEY] as TextItem[]) || []);
       });
     } else {
@@ -18,9 +23,14 @@ export const getItems = (): Promise<TextItem[]> => {
 };
 
 export const saveItems = (items: TextItem[]): Promise<void> => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     if (isChromeStorageAvailable) {
       chrome.storage.sync.set({ [STORAGE_KEY]: items }, () => {
+        if (chrome.runtime.lastError) {
+          console.error('Storage write error:', chrome.runtime.lastError.message);
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
         resolve();
       });
     } else {
